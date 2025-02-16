@@ -14,4 +14,7 @@ Scoreboard Reader is a javascript app for getting all scores for an objective fo
 
 # Where's my scoreboard.dat?
 
- Scoreboard.dat is normally found relatively to the rood directory of your minecraft server or saves directory: ``/<world>/data/scoreboard.dat``
+ Scoreboard.dat is normally found relative to the root directory of your minecraft server or saves directory:
+
+ - Singleplayer (windows): ``c:/users/<user>/appdata/roaming/.minecraft/saves/<world>/data/scoreboard.dat``
+ - Multiplayer ``./<world>/data/scoreboard.dat``
