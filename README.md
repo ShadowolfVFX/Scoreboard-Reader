@@ -5,12 +5,10 @@ Scoreboard Reader is a javascript app for getting all scores for an objective fo
 # Usage:
 <sub>You will need Node installed on your computer to use this software. You can find the lastest download here: https://nodejs.org/en</sub>
 
-1. Download all the code as a Zip File
-2. Extract the contents into a folder
-3. Open a terminal/CMD at that folder location.
-3. run ``npm install``
-4. run ``node index.js <path_to_scoreboard.dat> <objective_name>``
-5. Scoreboard reader will output the data found to the console as well as output ``<objective>_scores.txt`` to the location specified.
+1. Download and install the latest release
+2. Open the app and hit open and find your scoreboard.dat
+3. Select the objective from your dropdown and hit ``Read Scores``.
+4. The list below should be populated with all players scores, listed low to high. You can copy paste or download the scores.
 
 # Where's my scoreboard.dat?
 

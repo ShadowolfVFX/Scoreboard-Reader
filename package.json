@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:win": "electron-builder --win"
   },
   "keywords": [],
   "author": "",
@@ -18,4 +21,28 @@
   "devDependencies": {
     "electron-builder": "^25.1.8"
   }
+  "build": {
+    "appId": "your.app.id",
+    "productName": "Scoreboard Reader",
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "icon": "build/icons/icon.icns"
+    },
+    "linux": {
+      "icon": "build/icons/icon.png", 
+      "target": [
+        "deb",  
+        "rpm",
+        "snap", 
+        "AppImage" 
+      ]
+    },
+    "win": {
+      "icon": "build/icons/icon.ico",
+      "target": "nsis" 
+    }
+  }
+
 }
