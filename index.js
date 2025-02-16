@@ -1,7 +1,7 @@
-const fs = require('fs');
-const zlib = require('zlib');
-const nbt = require('nbt');
-const path = require('path');
+const fs = require("fs");
+const zlib = require("zlib");
+const nbt = require("nbt");
+const path = require("path");
 
 function parseScoreboard(filePath) {
   return new Promise((resolve, reject) => {
@@ -32,24 +32,37 @@ function parseScoreboard(filePath) {
 function processScores(nbtData, objective) {
   const scores = [];
 
-  if (nbtData && nbtData.value && nbtData.value.data && nbtData.value.data.value) {
+  if (
+    nbtData &&
+    nbtData.value &&
+    nbtData.value.data &&
+    nbtData.value.data.value
+  ) {
     const dataValue = nbtData.value.data.value;
 
-    if (dataValue.PlayerScores && dataValue.PlayerScores.value && dataValue.PlayerScores.value.value) {
+    if (
+      dataValue.PlayerScores &&
+      dataValue.PlayerScores.value &&
+      dataValue.PlayerScores.value.value
+    ) {
       const playerScores = dataValue.PlayerScores.value.value;
 
-      playerScores.forEach(entry => {
-        if (entry.Objective && entry.Objective.value === objective && entry.Name && entry.Score) {
+      playerScores.forEach((entry) => {
+        if (
+          entry.Objective &&
+          entry.Objective.value === objective &&
+          entry.Name &&
+          entry.Score
+        ) {
           scores.push({
             name: entry.Name.value,
-            score: entry.Score.value
+            score: entry.Score.value,
           });
         }
       });
     } else {
       console.log("PlayerScores data not found in NBT.");
     }
-
   } else {
     console.log("Data not found in NBT.");
   }
@@ -59,7 +72,9 @@ function processScores(nbtData, objective) {
 }
 
 function outputScores(scores, objective, filePath) {
-  const outputString = scores.map((player, index) => `${index + 1}. ${player.name}: ${player.score}`).join('\n');
+  const outputString = scores
+    .map((player, index) => `${index + 1}. ${player.name}: ${player.score}`)
+    .join("\n");
   const totalScore = scores.reduce((sum, player) => sum + player.score, 0);
   const outputWithTotal = outputString + `\nTotal: ${totalScore}`;
 
@@ -83,12 +98,18 @@ async function main() {
     return;
   }
 
-  const resolvedFilePath = path.isAbsolute(filePath) ? filePath : path.join(__dirname, filePath);
+  const resolvedFilePath = path.isAbsolute(filePath)
+    ? filePath
+    : path.join(__dirname, filePath);
 
   try {
     const nbtData = await parseScoreboard(resolvedFilePath);
     const scores = processScores(nbtData, objective);
-    outputScores(scores, objective, resolvedFilePath.replace('scoreboard.dat', `${objective}_scores.txt`));
+    outputScores(
+      scores,
+      objective,
+      resolvedFilePath.replace("scoreboard.dat", `${objective}_scores.txt`)
+    );
   } catch (err) {
     console.error("Error processing scoreboard:", err);
   }
