@@ -8,24 +8,20 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-        node-version: [16, 18]
+    runs-on: windows-latest  # Only Windows
+    timeout-minutes: 10       # Optional: Increased timeout
+
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 16 # Or your preferred Node version
           cache: 'npm'
-
+      - name: Check Disk Space # Optional: Check disk space
+        run: Get-PSDrive -Name C | Select-Object -Property Used,Free,Total | Format-List
       - run: npm install
-
-      - name: Build
-        run: npm run build
-
+      - name: Build Windows
+        run: npm run build:win  # Or npm run build if you don't have separate commands
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
