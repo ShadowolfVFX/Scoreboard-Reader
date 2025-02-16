@@ -1,0 +1,20 @@
+{
+  "name": "scoreboard-reader",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "nbt": "^0.8.1",
+    "node-nbt": "^1.0.0",
+    "prismarine-nbt": "^2.7.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^25.1.8"
+  }
+}
