@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scoreboard Reader</title>
+  <style>
+    #scoreList {
+      list-style-type: none;
+      padding: 0;
+    }
+    #scoreList li {
+        margin-bottom: 5px;
+    }
+    #filePath {
+      width: 300px;
+    }
+    #scoreBox {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+      width: 300px;
+      height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Scoreboard Reader</h1>
+
+  <label for="filePath">File Path:</label>
+  <input type="text" id="filePath" placeholder="Path to scoreboard.dat">
+  <button id="openFileButton">Open File</button><br><br>
+
+  <label for="objective">Objective:</label>
+  <select id="objectiveSelect">
+    </select><br><br>
+
+  <button id="readButton">Read Scores</button>
+  <button id="downloadButton">Download Scores</button>
+  <div id="output"></div>
+
+  <div id="scoreBox">
+    <ul id="scoreList"></ul>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
