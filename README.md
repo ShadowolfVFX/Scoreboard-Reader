@@ -5,7 +5,7 @@ Scoreboard Reader is a javascript app for getting all scores for an objective fo
 # Usage:
 <sub>You will need Node installed on your computer to use this software. You can find the lastest download here: https://nodejs.org/en</sub>
 
-1. Download download all the code as a Zip File
+1. Download all the code as a Zip File
 2. Extract the contents into a folder
 3. Open a terminal/CMD at that folder location.
 3. run ``npm install``
