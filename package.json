@@ -14,7 +14,7 @@
   "license": "ISC",
   "description": "An app to get scoreboard info",
   "dependencies": {
-    "nbt": "^0.8.1",
+    "nbt": "^0.8.1"
   },
   "devDependencies": {
     "electron-builder": "^25.1.8"
@@ -29,18 +29,17 @@
       "icon": "build/icons/icon.icns"
     },
     "linux": {
-      "icon": "build/icons/icon.png", 
+      "icon": "build/icons/icon.png",
       "target": [
-        "deb",  
+        "deb",
         "rpm",
-        "snap", 
-        "AppImage" 
+        "snap",
+        "AppImage"
       ]
     },
     "win": {
       "icon": "build/icons/icon.ico",
-      "target": "nsis" 
+      "target": "nsis"
     }
   }
-
 }
