@@ -11,3 +11,7 @@ Scoreboard Reader is a javascript app for getting all scores for an objective fo
 3. run ``npm install``
 4. run ``node index.js <path_to_scoreboard.dat> <objective_name>``
 5. Scoreboard reader will output the data found to the console as well as output ``<objective>_scores.txt`` to the location specified.
+
+# Where's my scoreboard.dat?
+
+ Scoreboard.dat is normally found relatively to the rood directory of your minecraft server or saves directory: ``/<world>/data/scoreboard.dat``
