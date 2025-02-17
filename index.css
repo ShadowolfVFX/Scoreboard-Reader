@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import url('https://fonts.cdnfonts.com/css/panton');
+
+@theme {
+  --color-primary: #FF7B00;
+  --color-secondary: #FFD791;
+  --color-alternate: #00B4D8;
+  --color-background-1: #172A3A;
+  --color-background-2: #004346;
+  --color-background-3: #001c35;
+}
+
+@layer components {
+  .btn {
+    @apply bg-blue-500 text-white font-bold py-2 px-4 rounded;
+  }
+}
+
+@layer base {
+  body {
+    font-family: 'Panton', sans-serif;
+    background-image: url("./../DASHLauncher_Background_v2.png");
+  }
+
+  .no-select {
+    @apply select-none;
+  }
+
+  .resizer-bar {
+    @apply w-1 cursor-ew-resize transition-colors duration-200;
+  }
+
+  .resizer-bar:hover {
+    background: #555;
+    /* @apply bg-gray-700; */
+  }
+
+  .selected {
+    @apply underline;
+  }
+}

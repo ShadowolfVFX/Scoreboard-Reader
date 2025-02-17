@@ -1,51 +1,75 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Scoreboard Reader</title>
-  <style>
-    #scoreList {
-      list-style-type: none;
-      padding: 0;
-    }
-    #scoreList li {
-        margin-bottom: 5px;
-    }
-    #filePath {
-      width: 300px;
-    }
-    #scoreBox {
-      border: 1px solid #7c7c7c;
-      background-color: #cdcdcd;
-      padding: 5px;
-      margin-top: 5px;
-      width: 300px;
-      height: 200px;
-      overflow-y: auto;
-    }
-  </style>
+  <link href="./dist/output.css" rel="stylesheet">
 </head>
-<body>
-  <h1>Scoreboard Reader</h1>
 
-  <label for="filePath">File Path:</label>
-  <input type="text" id="filePath" placeholder="Path to scoreboard.dat">
-  <button id="openFileButton">Open File</button><br><br>
+<body class="h-screen overflow-hidden text-primary">
+  <div id="container" class="flex h-full">
+    <!-- Left Sidebar -->
+    <nav id="sidebar" class="p-4 pr-2 no-select" style="width: 30%; min-width: 20%; max-width: 50%;">
+      <div class="h-full w-full bg-black/75 p-4 rounded">
+        <div>
+          <h1 class="font-bold">Scoreboard Reader</h1>
 
-  <label for="objective">Objective:</label>
-  <select id="objectiveSelect">
-    </select><br><br>
+          <label for="file-path">File Path:</label>
+          <input type="text" id="file-path" placeholder="Path to scoreboard.dat">
+          <button id="open-file-button">Open File</button>
+        </div>
+        <!-- list of objectives rather than a dropdown -->
+        <ul id="objective-list" class="h-auto min-h-40 border-red-300 overflow-y-auto border-1"></ul>
+        <footer class="mt-auto">
+          <p>Author: By ShadowolfVFX</p>
+        </footer>
+      </div>
+    </nav>
 
-  <button id="readButton">Read Scores</button>
-  <button id="downloadButton">Download Scores</button>
-  <div id="output"></div>
+    <!-- Drag Handle -->
+    <div id="resizer" class="resizer flex items-center mt-4 mb-4">
+      <div class="resizer-bar h-full rounded bg-background-1"></div>
+    </div>
 
-  <div id="scoreBox">
-    <ul id="scoreList"></ul>
+    <!-- Right Content -->
+    <main class="flex-1 p-4 pl-2">
+      <div class="h-full w-full bg-black/75 p-4 rounded-tr-3xl rounded-bl-3xl">
+        <button id="download-button">Download Scores</button>
+        <div id="output"></div>
+
+        <div id="score-box" class="w-full h-40 overflow-y-auto mt-4 border-1">
+          <ul id="score-list" class="transition-delay-900"></ul>
+        </div>
+      </div>
+    </main>
   </div>
 
+  <script>
+    const resizer = document.getElementById('resizer');
+    const sidebar = document.getElementById('sidebar');
+    let isResizing = false;
+
+    resizer.addEventListener('mousedown', (event) => {
+      isResizing = true;
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', stopResizing);
+    });
+
+    function handleMouseMove(event) {
+      if (!isResizing) return;
+
+      let newWidth = (event.clientX / window.innerWidth) * 100; // Convert px to %
+      newWidth = Math.max(20, Math.min(newWidth, 50)); // Clamp between 20% and 50%
+      sidebar.style.width = newWidth + '%';
+    }
+
+    function stopResizing() {
+      isResizing = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResizing);
+    }
+  </script>
   <script src="renderer.js"></script>
-  <footer>
-    <p>Author: By ShadowolfVFX</p>
-  </footer> 
 </body>
+
 </html>

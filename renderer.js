@@ -1,56 +1,59 @@
 const { ipcRenderer } = require('electron');
 
 let result; // Declare result outside the callback
+let selectedObjective = '';
 
 ipcRenderer.on('scores-result', (event, receivedResult) => {
-  const scoreList = document.getElementById('scoreList');
+  const scoreList = document.getElementById('score-list');
   scoreList.innerHTML = ''; // Clear previous results
 
   if (typeof receivedResult === 'string' && receivedResult.startsWith('Error:')) {
-      document.getElementById('output').textContent = receivedResult;
-      return;
+    document.getElementById('output').textContent = receivedResult;
+    return;
   }
 
   result = receivedResult; // Assign the received result to the outer variable
 
-  const scoresArray = result.split('\n').filter(line => line.trim()!== '');
+  const scoresArray = result.split('\n').filter(line => line.trim() !== '');
 
   scoresArray.forEach(score => {
-      const li = document.createElement('li');
-      li.textContent = score;
-      scoreList.appendChild(li);
+    const li = document.createElement('li');
+    li.textContent = score;
+    scoreList.appendChild(li);
   });
 
   document.getElementById('output').textContent = '';
 });
 
 ipcRenderer.on('objectives-list', (event, objectives) => {
-  const objectiveSelect = document.getElementById('objectiveSelect');
+  const objectiveSelect = document.getElementById('objective-list');
   objectiveSelect.innerHTML = ''; // Clear previous options
 
   objectives.forEach(objective => {
-    const option = document.createElement('option');
-    option.value = objective;
-    option.text = objective;
-    objectiveSelect.appendChild(option);
+    const li = document.createElement('li');
+    li.textContent = objective;
+    objectiveSelect.appendChild(li);
+
+    li.onclick = function () {
+      document.querySelectorAll("#selectable-list li").forEach(li => li.classList.remove("selected"));
+      li.classList.add("selected");
+      selectedObjective = li.textContent;
+
+      //directly read the scores rather than clicking the read button
+      const filePath = document.getElementById('file-path').value;
+      ipcRenderer.send('read-scores', filePath, selectedObjective);
+
+    }
   });
 });
 
-document.getElementById('readButton').addEventListener('click', () => {
-  const filePath = document.getElementById('filePath').value;
-  const objective = document.getElementById('objectiveSelect').value; // Get selected objective
-
-  ipcRenderer.send('read-scores', filePath, objective);
-});
-
 // Download button event listener
-const downloadButton = document.getElementById('downloadButton');
-downloadButton.addEventListener('click', () => {
-    ipcRenderer.send('download-scores', result);
+document.getElementById('download-button').addEventListener('click', () => {
+  ipcRenderer.send('download-scores', result);
 });
 
 // Drag and drop support
-const filePathInput = document.getElementById('filePath');
+const filePathInput = document.getElementById('file-path');
 
 filePathInput.addEventListener('dragover', (event) => {
   event.preventDefault();
@@ -70,9 +73,7 @@ filePathInput.addEventListener('drop', (event) => {
 });
 
 // Open file button
-const openFileButton = document.getElementById('openFileButton');
-
-openFileButton.addEventListener('click', () => {
+document.getElementById('open-file-button').addEventListener('click', () => {
   ipcRenderer.send('open-file-dialog');
 });
 
