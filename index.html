@@ -6,23 +6,46 @@
   <link href="./dist/output.css" rel="stylesheet">
 </head>
 
-<body class="h-screen overflow-hidden text-primary">
-  <div id="container" class="flex h-full">
+<body class="h-screen overflow-hidden text-text">
+  <div id="container" class="flex w-full h-full">
     <!-- Left Sidebar -->
-    <nav id="sidebar" class="p-4 pr-2 no-select" style="width: 30%; min-width: 20%; max-width: 50%;">
-      <div class="h-full w-full bg-black/75 p-4 rounded">
-        <div>
-          <h1 class="font-bold">Scoreboard Reader</h1>
+    <nav id="sidebar" class="p-4 pr-2 no-select xl:w-2/10 w-3/10">
+      <!-- style="width: 30%;" -->
+      <div class="h-full w-full bg-black/75 p-4 rounded flex flex-col">
 
-          <label for="file-path">File Path:</label>
-          <input type="text" id="file-path" placeholder="Path to scoreboard.dat">
-          <button id="open-file-button">Open File</button>
-        </div>
-        <!-- list of objectives rather than a dropdown -->
-        <ul id="objective-list" class="h-auto min-h-40 border-red-300 overflow-y-auto border-1"></ul>
-        <footer class="mt-auto">
-          <p>Author: By ShadowolfVFX</p>
+        <header class="border-b-1">
+
+          <div class="flex items-center">
+
+            <img src="./dist/scoreboard-reader-a.ico" alt="logo" class="w-12">
+            <!-- align h1 vertically centered -->
+            <h1 class="pl-4 text-4xl align-">Scoreboard Reader</h1>
+          </div>
+
+          <label for="file-path" class="mt-4">File Path:</label>
+
+          <div class="flex items-center rounded bg-background-1 mt-2">
+            <button id="open-file-button" class="rounded p-2 font-bold" title="Open File">
+              <!-- bg-gradient-to-r from-background-2 to-alternate -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-6 h-6 fill-secondary">
+                <!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
+                <path
+                  d="M128 64c0-35.3 28.7-64 64-64L352 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64l-256 0c-35.3 0-64-28.7-64-64l0-112 174.1 0-39 39c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l80-80c9.4-9.4 9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l39 39L128 288l0-224zm0 224l0 48L24 336c-13.3 0-24-10.7-24-24s10.7-24 24-24l104 0zM512 128l-128 0L384 0 512 128z" />
+              </svg>
+            </button>
+            <input type="text" id="file-path" class="w-full p-2 rounded bg-background-1"
+              placeholder="Path to scoreboard.dat">
+          </div>
+
+        </header>
+
+        <!-- list of objectives -->
+        <ul id="objectives-list" class="h-auto min-h-40 overflow-y-auto flex-grow"></ul>
+
+        <footer class="rounded mt-4 pt-4 text-center">
+          <p>Authors: ShadowolfVFX & Bowiemtl</p>
         </footer>
+
       </div>
     </nav>
 
@@ -32,42 +55,52 @@
     </div>
 
     <!-- Right Content -->
-    <main class="flex-1 p-4 pl-2">
-      <div class="h-full w-full bg-black/75 p-4 rounded-tr-3xl rounded-bl-3xl">
-        <button id="download-button">Download Scores</button>
-        <div id="output"></div>
+    <main class="p-4 pl-2 xl:w-8/10 w-7/10">
+      <!-- style="width: 70%; min-width: 50%;" -->
+      <div
+        class="h-full w-full overflow-y-auto bg-black/75 p-4 rounded-tr-3xl rounded-bl-3xl flex flex-col flex-grow items-stretch">
 
-        <div id="score-box" class="w-full h-40 overflow-y-auto mt-4 border-1">
-          <ul id="score-list" class="transition-delay-900"></ul>
+        <div class="w-full flex justify-between items-center">
+          <button id="save-button" class="btn">
+            Save Scores
+          </button>
+          <h1 id="total-score" class="font-bold"></h1>
+          <div id="output"></div>
+        </div>
+
+        <div class="w-full flex-grow">
+          <canvas id="score-canvas" class="w-full h-full"></canvas>
         </div>
       </div>
     </main>
   </div>
 
   <script>
-    const resizer = document.getElementById('resizer');
-    const sidebar = document.getElementById('sidebar');
-    let isResizing = false;
-
-    resizer.addEventListener('mousedown', (event) => {
-      isResizing = true;
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', stopResizing);
-    });
-
-    function handleMouseMove(event) {
-      if (!isResizing) return;
-
-      let newWidth = (event.clientX / window.innerWidth) * 100; // Convert px to %
-      newWidth = Math.max(20, Math.min(newWidth, 50)); // Clamp between 20% and 50%
-      sidebar.style.width = newWidth + '%';
-    }
-
-    function stopResizing() {
-      isResizing = false;
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', stopResizing);
-    }
+    /*     const resizer = document.getElementById('resizer');
+        const sidebar = document.getElementById('sidebar');
+        const main = document.querySelector('main');
+        let isResizing = false;
+    
+        resizer.addEventListener('mousedown', (event) => {
+          isResizing = true;
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', stopResizing);
+        });
+    
+        function handleMouseMove(event) {
+          if (!isResizing) return;
+    
+          let newWidth = (event.clientX / window.innerWidth) * 100; // Convert px to %
+          newWidth = Math.max(20, Math.min(newWidth, 50)); // Clamp between 20% and 50%
+          sidebar.style.width = newWidth + '%';
+          //main.style.width = (100 - newWidth) + '%'; //this won't work because scrollbars will appear briefly when resizing the nav bar up.
+        }
+    
+        function stopResizing() {
+          isResizing = false;
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', stopResizing);
+        } */
   </script>
   <script src="renderer.js"></script>
 </body>

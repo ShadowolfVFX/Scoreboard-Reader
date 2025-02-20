@@ -123,13 +123,9 @@ ipcMain.on("read-scores", async (event, filePath, objective) => {
       : path.join(__dirname, filePath);
     const nbtData = await parseScoreboard(resolvedFilePath);
     const scores = processScores(nbtData, objective);
-    const outputString = scores
-      .map((player, index) => `${index + 1}. ${player.name}: ${player.score}`)
-      .join("\n");
     const totalScore = scores.reduce((sum, player) => sum + player.score, 0);
-    const outputWithTotal = outputString + `\nTotal: ${totalScore}`;
 
-    event.reply("scores-result", outputWithTotal);
+    event.reply("scores-result", scores, totalScore);
   } catch (error) {
     event.reply("scores-result", `Error: ${error.message}`);
   }

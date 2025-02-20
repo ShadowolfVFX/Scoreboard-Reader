@@ -1,8 +1,27 @@
 @import "tailwindcss";
-@import url('https://fonts.cdnfonts.com/css/panton');
+
+@font-face {
+  font-family: 'Panton';
+  font-weight: 400;
+  src: url("./fonts/Panton/Panton-Black.otf") format('opentype'); /* Add this file the /dist folder with its subfolders */
+}
+
+@font-face {
+  font-family: 'Panton-Light';
+  font-weight: 300;
+  src: url("./fonts/Panton/Panton-ExtraLight.otf") format('opentype'); /* Add this file the /dist folder with its subfolders */
+}
+
+@font-face {
+  font-family: 'Panton-Bold';
+  font-weight: 700;
+  src: url("./fonts/Panton/Panton-ExtraBold.otf") format('opentype'); /* Add this file the /dist folder with its subfolders */
+}
+
 
 @theme {
   --color-primary: #FF7B00;
+  --color-text: #EACAAC;
   --color-secondary: #FFD791;
   --color-alternate: #00B4D8;
   --color-background-1: #172A3A;
@@ -12,14 +31,34 @@
 
 @layer components {
   .btn {
-    @apply bg-blue-500 text-white font-bold py-2 px-4 rounded;
+    @apply transition-all duration-150 rounded m-1 p-2 font-bold select-none bg-gradient-to-r from-background-1 to-background-3 border-1 border-background-3 hover:p-3 hover:m-0 hover:text-alternate hover:border-alternate;
   }
 }
 
 @layer base {
+  nav h1 {
+    font-family: "Panton-Bold";
+  }
+
+  #objectives-list {
+    /* custom scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) var(--color-background-1);
+  }
+  #open-file-button:hover {
+    @apply bg-blue-500;
+  }
+  /* #objectives-list::-webkit-scrollbar {
+    width: 12px;
+    border-radius: 10px;
+  } */
   body {
     font-family: 'Panton', sans-serif;
     background-image: url("./../DASHLauncher_Background_v2.png");
+    /* background-color: white; */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
   }
 
   .no-select {
@@ -36,6 +75,6 @@
   }
 
   .selected {
-    @apply underline;
+    @apply bg-blue-500 text-white;
   }
 }
