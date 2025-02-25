@@ -17,6 +17,7 @@
   "dependencies": {
     "@tailwindcss/cli": "^4.0.6",
     "chart.js": "^4.4.8",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "nbt": "^0.8.1",
     "node-nbt": "^1.0.0",
     "prismarine-nbt": "^2.7.0"

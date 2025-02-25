@@ -1,10 +1,24 @@
 const { ipcRenderer } = require('electron');
 const Chart = require('chart.js/auto');
+const ChartDataLabels = require('chartjs-plugin-datalabels'); 
+Chart.register(ChartDataLabels);
 
 let result; // Declare result outside the callback
 let selectedObjective = '';
 
 const ctx = document.getElementById('score-canvas');
+const searchInput = document.getElementById('search-box');
+const outputElement = document.getElementById('output');
+const totalScoreTitle = document.getElementById('total-score');
+const objectiveSelect = document.getElementById('objectives-list');
+const filePathInput = document.getElementById('file-path');
+const openFileButton = document.getElementById('open-file-button');
+const siteReferral = document.getElementById('site-referral');
+const saveButton = document.getElementById('save-button');
+const toggleLabelButton = document.getElementById('toggle-labels-button');
+let objectiveList = objectiveSelect.querySelectorAll('li');
+
+Chart.defaults.font.family = 'Panton';
 
 const stackedBar = new Chart(ctx, {
   type: 'bar',
@@ -26,7 +40,6 @@ const stackedBar = new Chart(ctx, {
         gradient.addColorStop(0, '#004346'); // color-background-2
         return gradient;
       },
-      // borderColor: '#FF7B00', // color-primary
       borderWidth: 2,
     }]
   },
@@ -35,9 +48,30 @@ const stackedBar = new Chart(ctx, {
     responsive: true,
     maintainAspectRatio: false,
     devicePixelRatio: 1,
+    animation: {
+      duration: 0,
+      x: {
+        duration: 500
+      },
+    },
     plugins: {
+      tooltip:{
+        enabled: false
+      },
       legend: {
         display: false,
+      },
+      datalabels: {
+        color: '#FFFFFF',
+        anchor: 'center',
+        align: 'center',
+        font: {
+          family: 'Panton',
+          size: 14
+        },
+        formatter: (value) => {
+          return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
       }
     },
     scales: {
@@ -61,50 +95,62 @@ const stackedBar = new Chart(ctx, {
 
     //TODO: This bar thickness causes overlapping of bars. Instead what I want to try is a minimum thickness for the bars,
     // and if the chart is too small, the canvas should rescale to fit the bars and be scrollable
-    // barThickness: 20,
   }
 });
 
-Chart.defaults.font.family = 'Panton';
 
 
-function addData(chart, label, newData) {
-  chart.data.labels.push(label);
-  chart.data.datasets.forEach((dataset) => {
-    dataset.data.push(newData);
+function addData(chart, labels, newDataArray) {
+  if (!labels.length || !newDataArray.length) return;
+
+  chart.data.labels = chart.data.labels.concat(labels);
+  chart.data.datasets.forEach((dataset, index) => {
+    dataset.data = dataset.data.concat(newDataArray);
   });
+
   chart.update();
 }
 
 function removeData(chart) {
-  //remove all the data and labels without resetting the config
-  chart.data.labels = [];
+  if (!chart.data.labels.length) return;
+
+  chart.data.labels.length = 0;
   chart.data.datasets.forEach((dataset) => {
-    dataset.data = [];
+    dataset.data.length = 0;
   });
+
   chart.update();
 }
 
-ipcRenderer.on('scores-result', (event, receivedResult, totalScore) => {
+toggleLabelButton.onclick = function () {
+  let plugins = stackedBar.options.plugins;
+  plugins.tooltip.enabled = !plugins.tooltip.enabled;
+  if(plugins.datalabels.font.size == 0) {
+    plugins.datalabels.font.size = 14;
+  } else {
+    plugins.datalabels.font.size = 0;
+  }
+
+  stackedBar.update('none');
+
+}
+
+ipcRenderer.on('scores-result', (event, receivedScores, receivedNames, totalScore) => {
   if (typeof receivedResult === 'string' && receivedResult.startsWith('Error:')) {
-    document.getElementById('output').textContent = receivedResult;
+    outputElement.textContent = receivedResult;
     return;
   }
 
-  let totalScoreTitle = document.getElementById('total-score');
   totalScore = totalScore.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas to the total score as a string
   totalScoreTitle.textContent = `Total Score: ${totalScore}`;
 
   removeData(stackedBar);
-  receivedResult.forEach(player => {
-    addData(stackedBar, player.name, player.score);
-  });
+  addData(stackedBar, receivedNames, receivedScores);
 
-  document.getElementById('output').textContent = '';
+  outputElement.textContent = '';
 });
 
 ipcRenderer.on('objectives-list', (event, objectives) => {
-  const objectiveSelect = document.getElementById('objectives-list');
   objectiveSelect.innerHTML = ''; // Clear previous options
 
   objectives.forEach(objective => {
@@ -117,21 +163,23 @@ ipcRenderer.on('objectives-list', (event, objectives) => {
       li.classList.add("selected");
       selectedObjective = li.textContent;
 
+      document.title = `Scoreboard Reader - ${selectedObjective}`;
+
       //directly read the scores rather than clicking the read button
-      const filePath = document.getElementById('file-path').value;
-      ipcRenderer.send('read-scores', filePath, selectedObjective);
+      ipcRenderer.send('read-scores', filePathInput.value, selectedObjective);
 
     }
   });
+
+  objectiveList = objectiveSelect.querySelectorAll('li');
 });
 
 // Download button event listener
-document.getElementById('save-button').addEventListener('click', () => {
+saveButton.addEventListener('click', () => {
   ipcRenderer.send('download-scores', result);
 });
 
 // Drag and drop support
-const filePathInput = document.getElementById('file-path');
 
 filePathInput.addEventListener('dragover', (event) => {
   event.preventDefault();
@@ -151,12 +199,30 @@ filePathInput.addEventListener('drop', (event) => {
 });
 
 // Open file button
-document.getElementById('open-file-button').addEventListener('click', () => {
+openFileButton.addEventListener('click', () => {
   ipcRenderer.send('open-file-dialog');
+});
+
+siteReferral.addEventListener('click', () => {
+  //Doing this to prevent the default behavior of opening the link in the app and instead open it in the default browser
+  require('electron').shell.openExternal('https://swfx.uk/resources/scoreboard-reader');
 });
 
 ipcRenderer.on('selected-file', (event, filePath) => {
   if (filePath) {
     filePathInput.value = filePath;
   }
+});
+
+
+searchInput.addEventListener('keyup', (event) => {
+  let textInput = searchInput.value.toLowerCase();
+  
+  objectiveList.forEach((element) => {
+    if (element.textContent.toLowerCase().includes(textInput)) {
+      element.classList.remove('hidden');
+    } else {
+      element.classList.add('hidden');
+    }
+  });
 });

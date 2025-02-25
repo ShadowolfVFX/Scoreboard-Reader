@@ -16,13 +16,15 @@
         <header class="border-b-1">
 
           <div class="flex items-center">
-
-            <img src="./dist/scoreboard-reader-a.ico" alt="logo" class="w-12">
-            <!-- align h1 vertically centered -->
-            <h1 class="pl-4 text-4xl align-">Scoreboard Reader</h1>
+            <img src="./dist/scoreboard-reader-a.ico" alt="logo" id="site-referral" class="w-[clamp(2rem,4vw,3rem)]">
+            <h1 class="pl-2 text-[clamp(1.2rem,3vw,2.5rem)] whitespace-nowrap overflow-hidden text-ellipsis">Scoreboard
+              Reader</h1>
           </div>
 
-          <label for="file-path" class="mt-4">File Path:</label>
+          <!-- <label for="file-input" class="mt-4">File Path:</label> -->
+
+          <!-- <input type="file" id="file-input" class="" accept=".dat"> -->
+
 
           <div class="flex items-center rounded bg-background-1 mt-2">
             <button id="open-file-button" class="rounded p-2 font-bold" title="Open File">
@@ -37,10 +39,14 @@
               placeholder="Path to scoreboard.dat">
           </div>
 
+
         </header>
 
         <!-- list of objectives -->
         <ul id="objectives-list" class="h-auto min-h-40 overflow-y-auto flex-grow"></ul>
+        <!-- search box -->
+        <input type="text" id="search-box" class="p-2 rounded bg-background-1 mt-2" placeholder="Search Objective">
+        <!-- mask-image-[linear-gradient(to_bottom,rgba(0,0,0,1),rgba(0,0,0,0))] -->
 
         <footer class="rounded mt-4 pt-4 text-center">
           <p>Authors: ShadowolfVFX & Bowiemtl</p>
@@ -61,9 +67,16 @@
         class="h-full w-full overflow-y-auto bg-black/75 p-4 rounded-tr-3xl rounded-bl-3xl flex flex-col flex-grow items-stretch">
 
         <div class="w-full flex justify-between items-center">
-          <button id="save-button" class="btn">
-            Save Scores
-          </button>
+          <div>
+            <button id="save-button" class="btn">
+              Save Scores
+            </button>
+            
+            <button id="toggle-labels-button" class="btn">
+              Toggle Labels
+            </button>
+          </div>
+
           <h1 id="total-score" class="font-bold"></h1>
           <div id="output"></div>
         </div>
