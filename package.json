@@ -4,26 +4,41 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux",
+    "build": "GENERATE_SOURCEMAP=false electron-builder",
+    "build:mac": "GENERATE_SOURCEMAP=false electron-builder --mac",
+    "build:linux": "GENERATE_SOURCEMAP=false electron-builder --linux",
     "build:win": "GH_TOKEN=${{ secrets.GH_TOKEN }} electron-builder --win",
     "tailwind": "npx @tailwindcss/cli -i ./index.css -o ./dist/output.css --watch"
   },
+  "homepage": "https://swfx.uk/resources/scoreboard-reader",
+  "bugs": {
+    "url": "https://github.com/ShadowolfVFX/Scoreboard-Reader/issues"
+  },
   "keywords": [],
-  "author": "ShadowolfVFX",
+  "author": {
+    "name": "ShadowolfVFX",
+    "email": "test@test.com",
+    "url": "https://shadowolfvfx.net/"
+  },
+  "contributors": [
+    {
+      "name": "Bowiemtl",
+      "email": "bowiemtl@gmail.com"
+    }
+  ],
   "license": "ISC",
   "description": "An app to get scoreboard info",
   "dependencies": {
-    "@tailwindcss/cli": "^4.0.6",
+    "@tailwindcss/cli": "^4.0.9",
     "chart.js": "^4.4.8",
     "chartjs-plugin-datalabels": "^2.2.0",
+    "chartjs-to-image": "^1.2.2",
     "nbt": "^0.8.1",
     "node-nbt": "^1.0.0",
     "prismarine-nbt": "^2.7.0"
   },
   "devDependencies": {
-    "electron": "^34.2.0",
+    "electron": "^34.3.0",
     "electron-builder": "^25.1.8"
   },
   "build": {

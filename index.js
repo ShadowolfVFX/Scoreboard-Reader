@@ -4,23 +4,41 @@ const fs = require("fs");
 const zlib = require("zlib");
 const nbt = require("nbt");
 
+function createWindow() {
+  const mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    minWidth: 800,
+    minHeight: 600,
+    webPreferences: {
+      contextIsolation: false,
+      nodeIntegration: true,
+      // preload: path.join(__dirname, "preload.js"),
+      icon: path.join(__dirname, "assets", "icon.ico")
+    },
+    autoHideMenuBar: true,
+  });
+
+  mainWindow.loadFile("index.html");
+}
+
 function parseScoreboard(filePath) {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, (err, data) => {
       if (err) {
-        reject(err);
+        reject(new Error(`Failed to read file: ${err.message}`));
         return;
       }
 
       zlib.gunzip(data, (err, unzippedData) => {
         if (err) {
-          reject(err);
+          reject(new Error(`Failed to unzip data: ${err.message}`));
           return;
         }
 
         nbt.parse(unzippedData, (err, nbtData) => {
           if (err) {
-            reject(err);
+            reject(new Error(`Failed to parse NBT data: ${err.message}`));
             return;
           }
           resolve(nbtData);
@@ -68,22 +86,8 @@ function getObjectives(nbtData) {
       objectives.push(objective.Name.value);
     });
   }
-  
+
   return objectives;
-}
-
-function createWindow() {
-  const mainWindow = new BrowserWindow({
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: true,
-      contextIsolation: false,
-      icon: path.join(__dirname, "assets", "icon.ico")
-    },
-    autoHideMenuBar: true,
-  });
-
-  mainWindow.loadFile("index.html");
 }
 
 app.whenReady().then(() => {

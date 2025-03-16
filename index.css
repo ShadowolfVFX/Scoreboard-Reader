@@ -18,7 +18,6 @@
   src: url("./fonts/Panton/Panton-ExtraBold.otf") format('opentype'); /* Add this file the /dist folder with its subfolders */
 }
 
-
 @theme {
   --color-primary: #FF7B00;
   --color-text: #EACAAC;
@@ -29,52 +28,60 @@
   --color-background-3: #001c35;
 }
 
+@layer base {
+  body {
+    font-family: 'Panton', sans-serif;
+    background-image: url("./../DASHLauncher_Background_v2.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) var(--color-background-1);
+  }
+  .selected {
+    @apply bg-blue-500 text-white;
+  }
+
+  nav h1 {
+    font-family: "Panton-Bold";
+  }
+  #open-file-button:hover {
+    @apply bg-blue-500;
+  }
+}
+
+/* Hide scrollbar */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+::-webkit-resizer {
+  /* background-color: var(--color-primary); */
+  width: 20px;
+  /* height: 100%; */
+  /* cursor: ew-resize; */
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 @layer components {
   .btn {
     @apply transition-all duration-150 rounded m-1 p-2 font-bold select-none bg-gradient-to-r from-background-1 to-background-3 border-1 border-background-3 hover:p-3 hover:m-0 hover:text-alternate hover:border-alternate;
   }
 }
 
-@layer base {
-  nav h1 {
-    font-family: "Panton-Bold";
+@layer utilities {
+  .text-fluid {
+    font-size: clamp(1.2rem, 3vw, 2.5rem);
   }
-
-  #objectives-list {
-    /* custom scrollbar styling */
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-primary) var(--color-background-1);
-  }
-  #open-file-button:hover {
-    @apply bg-blue-500;
-  }
-  /* #objectives-list::-webkit-scrollbar {
-    width: 12px;
-    border-radius: 10px;
-  } */
-  body {
-    font-family: 'Panton', sans-serif;
-    background-image: url("./../DASHLauncher_Background_v2.png");
-    /* background-color: white; */
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
-  }
-
-  .no-select {
-    @apply select-none;
-  }
-
-  .resizer-bar {
-    @apply w-1 cursor-ew-resize transition-colors duration-200;
-  }
-
-  .resizer-bar:hover {
-    background: #555;
-    /* @apply bg-gray-700; */
-  }
-
-  .selected {
-    @apply bg-blue-500 text-white;
+  
+  .icon-fluid {
+    width: clamp(2rem, 4vw, 3rem);
+    height: auto;
   }
 }
+
