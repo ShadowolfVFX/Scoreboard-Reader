@@ -33,40 +33,27 @@ function parseScoreboard(filePath) {
 function processScores(nbtData, objective) {
   const scores = [];
 
-  if (
-    nbtData &&
-    nbtData.value &&
-    nbtData.value.data &&
-    nbtData.value.data.value
-  ) {
-    const dataValue = nbtData.value.data.value;
-
-    if (
-      dataValue.PlayerScores &&
-      dataValue.PlayerScores.value &&
-      dataValue.PlayerScores.value.value
-    ) {
-      const playerScores = dataValue.PlayerScores.value.value;
-
-      playerScores.forEach((entry) => {
-        if (
-          entry.Objective &&
-          entry.Objective.value === objective &&
-          entry.Name &&
-          entry.Score
-        ) {
-          scores.push({
-            name: entry.Name.value,
-            score: entry.Score.value,
-          });
-        }
-      });
-    } else {
-      console.log("PlayerScores data not found in NBT.");
-    }
-  } else {
+  const dataValue = nbtData?.value?.data?.value;
+  if (!dataValue) {
     console.log("Data not found in NBT.");
+    return scores;
   }
+
+  const playerScores = dataValue.PlayerScores.value.value;
+  if (!playerScores) {
+    console.log("PlayerScores data not found in NBT.");
+    return scores;
+  }
+
+
+  playerScores.forEach((entry) => {
+    if (entry?.Objective?.value === objective && entry?.Name && entry?.Score) {
+      scores.push({
+        name: entry.Name.value,
+        score: entry.Score.value,
+      });
+    }
+  });
 
   scores.sort((a, b) => b.score - a.score);
   return scores;
@@ -74,20 +61,14 @@ function processScores(nbtData, objective) {
 
 function getObjectives(nbtData) {
   const objectives = [];
-  if (
-    nbtData &&
-    nbtData.value &&
-    nbtData.value.data &&
-    nbtData.value.data.value &&
-    nbtData.value.data.value.Objectives &&
-    nbtData.value.data.value.Objectives.value &&
-    nbtData.value.data.value.Objectives.value.value
-  ) {
+
+  if (nbtData?.value?.data?.value?.Objectives?.value?.value) {
     const objectivesList = nbtData.value.data.value.Objectives.value.value;
     objectivesList.forEach((objective) => {
       objectives.push(objective.Name.value);
     });
   }
+  
   return objectives;
 }
 
@@ -99,6 +80,7 @@ function createWindow() {
       contextIsolation: false,
       icon: path.join(__dirname, "assets", "icon.ico")
     },
+    autoHideMenuBar: true,
   });
 
   mainWindow.loadFile("index.html");
@@ -123,13 +105,9 @@ ipcMain.on("read-scores", async (event, filePath, objective) => {
       : path.join(__dirname, filePath);
     const nbtData = await parseScoreboard(resolvedFilePath);
     const scores = processScores(nbtData, objective);
-    const outputString = scores
-      .map((player, index) => `${index + 1}. ${player.name}: ${player.score}`)
-      .join("\n");
     const totalScore = scores.reduce((sum, player) => sum + player.score, 0);
-    const outputWithTotal = outputString + `\nTotal: ${totalScore}`;
 
-    event.reply("scores-result", outputWithTotal);
+    event.reply("scores-result", scores.map(entry => entry.score), scores.map(entry => entry.name), totalScore);
   } catch (error) {
     event.reply("scores-result", `Error: ${error.message}`);
   }

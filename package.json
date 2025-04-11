@@ -7,14 +7,20 @@
     "build": "electron-builder",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
-    "build:win": "GH_TOKEN=${{ secrets.GH_TOKEN }} electron-builder --win"
+    "build:win": "GH_TOKEN=${{ secrets.GH_TOKEN }} electron-builder --win",
+    "tailwind": "npx @tailwindcss/cli -i ./index.css -o ./dist/output.css --watch"
   },
   "keywords": [],
   "author": "ShadowolfVFX",
   "license": "ISC",
   "description": "An app to get scoreboard info",
   "dependencies": {
-    "nbt": "^0.8.1"
+    "@tailwindcss/cli": "^4.0.6",
+    "chart.js": "^4.4.8",
+    "chartjs-plugin-datalabels": "^2.2.0",
+    "nbt": "^0.8.1",
+    "node-nbt": "^1.0.0",
+    "prismarine-nbt": "^2.7.0"
   },
   "devDependencies": {
     "electron": "^34.2.0",
