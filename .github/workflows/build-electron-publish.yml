@@ -1,4 +1,4 @@
-name: Build and Publish Electron App all platforms
+name: Build and Publish Electron App (Cross-Platform)
 
 on:
   push:
@@ -40,6 +40,7 @@ jobs:
         with:
           path: ~/.npm
           key: "no-cache-${{ github.run_id }}"
+
 
       - name: Install Node Dependencies
         run: npm install
