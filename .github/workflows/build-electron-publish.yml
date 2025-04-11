@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*.*.*' # Only runs when pushing tags like v1.0.0
+      - 'v*.*.*' # Trigger only on version tags, e.g., v1.0.0
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -53,19 +53,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: artifacts
+          node-version: '18'
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: Release ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
-          body: |
-            ⚡ Auto-generated release for version ${{ github.ref_name }}
-          token: ${{ env.GH_TOKEN }}
-          files: |
-            artifacts/**/*
-            
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TailwindCSS
+        run: npm run build:css
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npx electron-builder --publish always
