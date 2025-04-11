@@ -3,17 +3,17 @@
 @font-face {
   font-family: 'Panton';
   font-weight: 400;
-  src: url("./fonts/Panton/Panton-Black.otf") format('opentype');
+  src: url("./fonts/Panton-Black.otf") format('opentype');
 }
 @font-face {
   font-family: 'Panton-Light';
   font-weight: 300;
-  src: url("./fonts/Panton/Panton-ExtraLight.otf") format('opentype');
+  src: url("./fonts/Panton-ExtraLight.otf") format('opentype');
 }
 @font-face {
   font-family: 'Panton-Bold';
   font-weight: 700;
-  src: url("./fonts/Panton/Panton-Bold.otf") format('opentype');
+  src: url("./fonts/Panton-Bold.otf") format('opentype');
 }
 
 @theme {
