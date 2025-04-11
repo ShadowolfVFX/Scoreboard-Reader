@@ -17,7 +17,7 @@ jobs:
     # Use a matrix strategy to run builds on macOS, Ubuntu, and Windows
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }} # Run on the OS specified in the matrix
 
     steps:
@@ -49,13 +49,6 @@ jobs:
       - name: Build CSS
         run: npm run build:css # Build the Tailwind CSS
 
-      # Build the application specific to the OS
-      - name: Build for macOS
-        if: matrix.os == 'macos-latest'
-        run: npm run build:mac # Uses electron-builder --mac
-        env:
-          # Pass the custom GH_TOKEN secret to electron-builder if needed
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Build for Linux
         if: matrix.os == 'ubuntu-latest'
