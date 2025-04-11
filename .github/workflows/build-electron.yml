@@ -1,9 +1,11 @@
+# .github/workflows/build-publish-electron.yml
+
 name: Build and Publish Electron App (Cross-Platform)
 
 on:
   push:
     tags:
-      - 'v*.*.*' # Example: v1.0.0, v2.3.4
+      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
@@ -17,43 +19,26 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'  # You can specify the version, or use 3.x for latest
-
-      # Install the dependencies
-      - name: Install dependencies
-        run: |
-          python -m ensurepip --upgrade
-          python -m pip install --upgrade pip setuptools
-          npm install  # or other steps needed to install your dependencies
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19.0'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '20.x'
 
       - name: Cache Node.js modules
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: "no-cache-${{ github.run_id }}"
-
-
-      - name: Check GH_TOKEN
-        run: echo "GH_TOKEN is ${{ secrets.GH_TOKEN }}"
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          key: ${{ runner.os }}-node-${{ matrix.node-version || '20.x' }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version || '20.x' }}-
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build Tailwind CSS
+      - name: Build Tailwind CSS (if applicable)
         run: npm run build:css
 
       - name: Build and Publish App
         run: npm run build
-
-        
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
