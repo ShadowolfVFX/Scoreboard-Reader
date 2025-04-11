@@ -17,7 +17,7 @@ jobs:
     # Use a matrix strategy to run builds on macOS, Ubuntu, and Windows
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [windows-latest]
     runs-on: ${{ matrix.os }} # Run on the OS specified in the matrix
 
     steps:
