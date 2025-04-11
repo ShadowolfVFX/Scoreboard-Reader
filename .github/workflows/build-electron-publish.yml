@@ -24,20 +24,25 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4 # Checks out the repository code
 
+      # ADDED: Set up specific Python version BEFORE Node.js
+      # Use Python 3.11 which includes distutils natively
+      - name: Set up Python 3.11
+        # Only needed on OSes potentially defaulting to Python 3.12+
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # setup-node should detect and use the Python version configured above
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20' # Specify your desired Node.js version
           cache: 'npm' # Enable caching for npm dependencies
 
-      # ADDED STEP: Ensure setuptools is available for node-gyp on Python 3.12+
-      # This fixes the "ModuleNotFoundError: No module named 'distutils'" error
-      - name: Install Python setuptools (for node-gyp compatibility)
-        # Run on OSes most likely to use Python 3.12+ where distutils is removed
-        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
-        run: pip install setuptools
+      # REMOVED: The 'pip install setuptools' step is no longer needed when using Python 3.11
 
-      # Install dependencies AFTER ensuring setuptools is present
+      # Install dependencies (will use Python 3.11 for node-gyp)
       - name: Install dependencies
         run: npm install
 
