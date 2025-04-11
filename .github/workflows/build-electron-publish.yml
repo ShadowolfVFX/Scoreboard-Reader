@@ -1,5 +1,4 @@
-name: Build and Publish Electron App (Cross-Platform)
-
+name: Build and Publish Electron App
 on:
   push:
     tags:
