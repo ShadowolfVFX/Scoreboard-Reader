@@ -1,26 +1,24 @@
-name: Build Electron App
+name: Build and Publish Electron App (On Tag)
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - 'v*.*.*' # Example: v1.0.0, v2.3.4
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build-and-publish-windows:
     runs-on: windows-latest
 
     steps:
-      # Checkout the repo
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Cache npm dependencies
       - name: Cache Node.js modules
         uses: actions/cache@v4
         with:
@@ -29,25 +27,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Build Tailwind CSS (optional if you have this step)
       - name: Build Tailwind CSS
         run: npm run build:css
 
-      # Build the Electron App
-      - name: Build Windows App
+      - name: Build and Publish Windows App
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }} # Provide the GitHub token here
-        run: npm run build -- --win --x64
-
-      # Upload the built artifacts
-      - name: Upload Windows Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: scoreboard-reader-windows-x64
-          path: |
-            dist/**/*.exe
-            dist/**/*.zip
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npm run publish -- --win --x64
