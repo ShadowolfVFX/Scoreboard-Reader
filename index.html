@@ -2,84 +2,201 @@
 <html>
 
 <head>
-  <title>Scoreboard Reader</title>
-  <link href="./dist/output.css" rel="stylesheet">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://cdn.jsdelivr.net;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: file:;
+    font-src 'self';
+    object-src 'none';
+  ">
+    <title>Scoreboard Reader</title>
+    <link href="./output.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        /* Removed #sidebar::-webkit-resizer styles */
+
+        #sidebar {
+            /* resize: horizontal; <<< REMOVE THIS if present */
+            overflow: auto; /* Keep for content */
+            position: relative;
+            /* Base width is set by Tailwind w-72, min/max by inline styles/classes */
+        }
+        #file-path.dragging {
+            outline: 2px dashed var(--color-primary);
+            background-color: var(--color-background-2);
+        }
+        #objectives-list li.selected {
+            background-color: var(--color-alternate);
+            color: var(--color-background-3);
+            font-weight: bold;
+        }
+        #objectives-list li {
+            padding: 0.3rem 0.5rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: background-color 0.15s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #objectives-list li:hover {
+            background-color: var(--color-background-2);
+        }
+        .sidebar-collapsed {
+            width: 0 !important;
+            min-width: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            opacity: 0 !important;
+            overflow: hidden !important;
+            pointer-events: none;
+        }
+
+        /* Styles for the Custom Resize Handle */
+        #resize-handle {
+            width: 6px; /* Visual width of the handle */
+            /* It sits in the 'gap-4' (1rem) defined by the parent flex container */
+            background-color: rgba(255, 123, 0, 0.3); /* Theme color */
+            background-clip: padding-box;
+            border-radius: 3px;
+            cursor: ew-resize;
+            height: 100%; /* Fill parent height */
+            flex-shrink: 0; /* Prevent handle from shrinking */
+            transition: background-color 0.2s ease-in-out;
+            z-index: 10; /* Ensure it's clickable */
+        }
+        #resize-handle:hover {
+            background-color: rgba(255, 123, 0, 0.6);
+        }
+
+        /* Prevent text selection during drag */
+        body.resizing {
+           cursor: ew-resize !important;
+           user-select: none;
+           -webkit-user-select: none; /* Safari */
+           -moz-user-select: none; /* Firefox */
+           -ms-user-select: none; /* IE/Edge */
+        }
+        body.resizing * { /* Apply to all children */
+           user-select: none;
+           -webkit-user-select: none;
+           -moz-user-select: none;
+           -ms-user-select: none;
+           pointer-events: none; /* Prevent accidental interaction with other elements */
+        }
+        /* Ensure handle remains interactive */
+        body.resizing #resize-handle {
+            pointer-events: auto;
+        }
+
+
+        /* Minimalist Scrollbar for Objectives List */
+        #objectives-list {
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: var(--color-primary) transparent; /* Firefox: Thumb Track */
+        }
+        #objectives-list::-webkit-scrollbar {
+            width: 6px; /* Width of the scrollbar */
+            height: 6px;
+        }
+        #objectives-list::-webkit-scrollbar-track {
+            background: transparent; /* Make track invisible */
+            border-radius: 3px;
+        }
+        #objectives-list::-webkit-scrollbar-thumb {
+            background-color: var(--color-primary); /* Color of the thumb */
+            border-radius: 3px; /* Rounded corners */
+            border: 1px solid var(--color-background-3); /* Optional border to match background */
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        #objectives-list::-webkit-scrollbar-thumb:hover {
+            background-color: var(--color-secondary); /* Color on hover */
+            opacity: 1;
+        }
+        #objectives-list::-webkit-scrollbar-corner {
+           background: transparent;
+         }
+    </style>
 </head>
 
-<body class="overflow-hidden text-text select-none">
-  <div class="p-4 flex h-screen gap-4">
-    <!-- Left Sidebar -->
-    <nav id="sidebar" class="w-fit flex flex-col flex-grow resize-x overflow-auto">
-      <div class="h-full w-full bg-black/75 p-4 rounded flex flex-col">
+<body class="overflow-hidden text-text select-none bg-background-3">
+    <div class="absolute inset-0 bg-cover bg-center bg-no-repeat z-[-1]" style="background-image: url('./DASHLauncher_Background_v2.png');"></div>
 
-        <header class="border-b-1">
+    <div class="p-4 flex h-screen gap-4 relative z-[0]">
 
-          <div class="flex items-center">
-            <img src="./dist/scoreboard-reader-a.ico" alt="logo" id="site-referral" class="w-[clamp(2rem,4vw,3rem)]">
-            <h1 class="pl-2 text-[clamp(1.2rem,3vw,2.5rem)] whitespace-nowrap overflow-hidden text-ellipsis">
-              Scoreboard Reader
-            </h1>
+        <nav id="sidebar" class="flex flex-col w-72 min-w-[220px] max-w-[600px] flex-shrink-0 overflow-auto transition-all duration-300 ease-in-out">
+             <div class="h-full w-full bg-black/80 backdrop-blur-sm p-4 rounded-lg flex flex-col min-h-0 shadow-lg">
+                <header class="border-b border-gray-600/50 pb-3 mb-3 flex-shrink-0">
+                  <div class="flex items-center">
+                    <img src="./assets/icon.ico" alt="logo" id="site-referral" class="icon-fluid flex-shrink-0 cursor-pointer" title="About Scoreboard Reader">
+                    <h1 class="pl-2 text-fluid whitespace-nowrap overflow-hidden text-ellipsis font-bold"> Scoreboard Reader </h1>
+                  </div>
+                  <div class="flex items-center rounded bg-background-1 mt-3 ring-1 ring-inset ring-background-3 focus-within:ring-2 focus-within:ring-primary transition-shadow duration-150">
+                    <button id="open-file-button" class="rounded-l p-2 font-bold text-secondary hover:bg-primary/20 transition-colors duration-150" title="Open scoreboard.dat File">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="w-5 h-5 fill-current"> <path d="M88.7 223.8L0 375.8V96C0 60.7 28.7 32 64 32H181.5c17 0 33.3 6.7 45.3 18.7l26.5 26.5c12 12 28.3 18.7 45.3 18.7H416c35.3 0 64 28.7 64 64v32H144c-22.8 0-43.8 12.1-55.3 31.8zm27.6 16.1C122.1 230 132.6 224 144 224H544c11.5 0 22 6.1 27.7 16.1s5.7 22.2-.1 32.1l-112 192C453.9 474 443.4 480 432 480H32c-11.5 0-22-6.1-27.7-16.1s-5.7-22.2 .1-32.1l112-192z"/> </svg>
+                    </button>
+                    <input type="text" id="file-path" class="w-full p-2 rounded-r bg-transparent text-text placeholder-gray-400/70 focus:outline-none text-sm" placeholder="Path to scoreboard.dat (or drag here)">
+                  </div>
+                </header>
+
+                <div class="flex-grow min-h-0 flex flex-col">
+                    <label for="search-box" class="text-sm font-panton-light text-secondary mb-1">Objectives:</label>
+                    <input type="text" id="search-box" class="p-2 rounded bg-background-1 focus:outline-none ring-1 ring-inset ring-background-3 focus:ring-2 focus:ring-primary text-sm flex-shrink-0 mb-2" placeholder="Search Objectives...">
+                    <ul id="objectives-list" class="overflow-y-auto flex-grow border border-background-1 rounded p-1 bg-background-3/50">
+                        <li class="text-gray-400 italic">Load a scoreboard.dat file...</li>
+                    </ul>
+                </div>
+
+                <footer class="rounded mt-4 pt-3 text-center border-t border-gray-600/50 flex-shrink-0">
+                  <p class="text-xs text-gray-400/80">Authors: ShadowolfVFX & Bowiemtl</p>
+                </footer>
+              </div>
+        </nav>
+
+        <div id="resize-handle"></div>
+
+        <main class="flex-grow select-none min-w-0 flex flex-col">
+             <div class="h-full w-full bg-black/80 backdrop-blur-sm p-4 rounded-lg flex flex-col items-stretch min-h-0 shadow-lg">
+
+                <div class="w-full flex justify-start items-center p-2 flex-shrink-0 gap-2 mb-2 border-b border-gray-600/50 pb-3">
+                   <button id="toggle-sidebar-button" class="btn bg-black/80 backdrop-blur-sm shadow-lg" title="Hide Sidebar">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="w-5 h-5 fill-current">
+                             <path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/>
+                        </svg>
+                   </button>
+                  <button id="save-button" class="btn" title="Save current scores to a text/csv file" disabled>Save Scores</button>
+                  <button id="toggle-labels-button" class="btn" title="Hide score values on bars" disabled>Hide Labels</button>
+                  <button id="export-png-button" class="btn" title="Export chart as PNG image">Export PNG</button>
+                  <h1 id="total-score" class="font-panton-bold select-none flex-1 text-center text-lg text-secondary whitespace-nowrap overflow-hidden text-ellipsis px-4" title="Total score for selected objective"></h1>
+                 </div>
+
+                <div id="chart-container" class="w-full flex-grow overflow-hidden relative min-h-0">
+                  <canvas id="score-canvas"></canvas>
+                  <div id="chart-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-500 text-lg italic">
+                     Select an objective from the list to view the chart.
+                  </div>
+                </div>
+              </div>
+        </main>
+
+        <canvas id="invisible-canvas" style="display:none;"></canvas>
+
+        <dialog id="open-site-modal" class="bg-background-1 rounded-lg p-6 text-text shadow-xl border border-primary/50 w-full max-w-md">
+          <h1 class="text-lg font-bold mb-3 text-secondary">Open External Link?</h1>
+          <p class="mb-2">Do you want to open the following link in your default web browser?</p>
+          <p class="mb-5 bg-background-3 p-2 rounded text-sm break-all"><i>https://swfx.uk/resources/scoreboard-reader</i></p>
+          <div class="flex justify-end gap-3">
+              <button class="btn !bg-background-2 hover:!bg-background-1" id="close-modal-button">No</button>
+              <button class="btn !bg-primary/80 hover:!bg-primary text-background-3" id="site-referral-button">Yes, Open Link</button>
           </div>
+        </dialog>
+    </div>
 
-          <div class="flex items-center rounded bg-background-1 mt-2">
-            <button id="open-file-button" class="rounded p-2 font-bold" title="Open File">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-6 h-6 fill-secondary">
-                <path d="M128 64c0-35.3 28.7-64 64-64L352 0l0 128c0 17.7 14.3 32 32 32l128 0 0 288c0 35.3-28.7 64-64 64l-256 0c-35.3 0-64-28.7-64-64l0-112 174.1 0-39 39c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l80-80c9.4-9.4 9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l39 39L128 288l0-224zm0 224l0 48L24 336c-13.3 0-24-10.7-24-24s10.7-24 24-24l104 0zM512 128l-128 0L384 0 512 128z" />
-              </svg>
-            </button>
-            <input type="text" id="file-path" class="w-full p-2 rounded bg-background-1" placeholder="Path to scoreboard.dat">
-          </div>
+    <script src="chart.js"></script>
+    <script src="renderer.js"></script>
 
-
-        </header>
-
-        <!-- list of objectives -->
-        <ul id="objectives-list" class="h-auto min-h-40 overflow-y-auto flex-grow"></ul>
-        <!-- search box -->
-        <input type="text" id="search-box" class="p-2 rounded bg-background-1 mt-2" placeholder="Search Objective">
-
-        <footer class="rounded mt-4 pt-4 text-center">
-          <p>Authors: ShadowolfVFX & Bowiemtl</p>
-        </footer>
-      </div>
-
-    </nav>
-
-    <!-- Right Content -->
-    <main class="flex-grow select-none col-span-2">
-      <div class="h-full w-full bg-black/75 p-4 rounded-tr-3xl rounded-bl-3xl flex flex-col flex-grow items-stretch">
-
-        <!-- Button Container (Fixed) -->
-        <div class="w-full flex justify-start items-center sticky top-0 z-10 p-2">
-          <button id="save-button" class="btn">Save Scores</button>
-          <button id="toggle-labels-button" class="btn">Toggle Labels</button>
-          <!-- TODO: these buttons need functionality. The export image is quite easy since we're dealing with a html canvas, but we can't set a resolution to it so it's adjusting to the windows resoltion which we don't want. The display mode will probably not be too hard either but you'd need to do some data parsing for that. -->
-          <!-- <button id="export-button" class="btn">Export Image</button> -->
-          <!-- <button id="toggle-mode-button" class="btn">Mode: percentage/value/date</button> -->
-          <h1 id="total-score" class="font-bold select-none flex-1 text-center"></h1>
-          <div id="output"></div>
-        </div>
-
-        <!-- Scrollable Chart Container hide-scrollbar-->
-        <div id="chart-container" class="w-full flex-grow overflow-auto relative">
-          <canvas id="score-canvas" class="w-full h-auto"></canvas>
-        </div>
-      </div>
-    </main>
-
-    <canvas id="invisible-canvas" style="display:none;"></canvas>
-
-    <dialog id="open-site-modal" class="bg-background-1 rounded fixed inset-0 p-4 text-text">
-      <h1>Do you want to open this link in your browser?</h1>
-      <p><i>
-          <pre>https://swfx.uk/resources/scoreboard-reader</pre>
-        </i></p>
-      <button class="btn" id="close-modal-button">No</button>
-      <button class="btn" id="site-referral-button">Yes</button>
-    </dialog>
-  </div>
-  <script src="renderer.js"></script>
-  <script src="chart.js"></script>
 </body>
-
 </html>

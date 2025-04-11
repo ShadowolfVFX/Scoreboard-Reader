@@ -1,158 +1,223 @@
-const Chart = require('chart.js/auto');
-const ChartDataLabels = require('chartjs-plugin-datalabels');
-const ChartJsImage = require('chartjs-to-image');
-
-Chart.register(ChartDataLabels);
+if (typeof ChartDataLabels !== 'undefined') {
+  Chart.register(ChartDataLabels);
+} else {
+  console.error("ChartDataLabels plugin not found. Labels may not work.");
+}
 
 Chart.defaults.font.family = 'Panton';
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#EACAAC';
 
-const canvas = document.getElementById('score-canvas');
-const ctx = canvas.getContext('2d');
-const outputElement = document.getElementById('output');
-const totalScoreTitle = document.getElementById('total-score');
-const toggleLabelButton = document.getElementById('toggle-labels-button');
-const exportButton = document.getElementById('export-button');
-const invisibleCanvas = document.getElementById('invisible-canvas');
+let myChart;
 
-const myChart = new Chart(ctx, {
-  normalized: true,
-  parsing: false,
-  type: 'bar',
-  data: {
-    labels: [],
-    datasets: [{
-      label: 'Scores',
-      data: [],
-      backgroundColor: (context) => {
-        const chart = context.chart;
-        const { ctx, chartArea } = chart;
-        if (!chartArea) {
-          return '#FF7B00';
-        }
-        const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-        gradient.addColorStop(1, '#00B4D8'); // color-alternate
-        gradient.addColorStop(0, '#004346'); // color-background-2
-        return gradient;
-      },
-      borderWidth: 2,
-    }]
-  },
-  options: {
-    indexAxis: 'y',
-    responsive: true,
-    maintainAspectRatio: false,
-    devicePixelRatio: 1,
-    animation: {
-      duration: 0,
-      x: {
-        duration: 500
-      },
-    },
-    plugins: {
-      tooltip: {
-        enabled: false,
-        mode: 'index',
-      },
-      legend: {
-        display: false,
-      },
-      datalabels: {
-        color: '#FFFFFF',
-        anchor: 'center',
-        align: 'center',
-        font: {
-          family: 'Panton',
-          size: 14
-        },
-        formatter: (value) => {
-          return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: {
-          color: '#001c35',
-        },
-        stacked: true,
-        ticks: {
-          color: '#FF7B00',
-          autoSkip: false
-        },
-        categoryPercentage: 1.0,
-        barPercentage: 1.0
-      },
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: '#001c35',
-        },
-        stacked: true,
-        ticks: {
-          color: '#FF7B00'
-        },
-        categoryPercentage: 1.0,
-        barPercentage: 1.0
-      }
-    },
+function updateChart(labels, data) {
+  if (!myChart) {
+     console.error("Chart object (myChart) not initialized. Cannot update.");
+     return;
   }
-});
+  const maxLength = Math.max(labels.length, data.length);
+  const safeLabels = labels.slice(0, maxLength);
+  const safeData = data.slice(0, maxLength);
 
-toggleLabelButton.onclick = function () {
-  let plugins = myChart.options.plugins;
-  plugins.tooltip.enabled = !plugins.tooltip.enabled;
-  plugins.datalabels.font.size = plugins.datalabels.font.size === 0 ? 14 : 0;
-  myChart.update('none');
-}
-
-function addData(chart, labels, newDataArray) {
-  if (!labels.length || !newDataArray.length) return;
-  chart.data.labels = chart.data.labels.concat(labels);
-  chart.data.datasets.forEach((dataset) => {
-    dataset.data = dataset.data.concat(newDataArray);
+  myChart.data.labels = safeLabels;
+  myChart.data.datasets.forEach((dataset) => {
+     dataset.data = safeData;
   });
-  chart.update();
-}
 
-function removeData(chart) {
-  if (!chart.data.labels.length) return;
-  chart.data.labels.length = 0;
-  chart.data.datasets.forEach((dataset) => {
-    dataset.data.length = 0;
-  });
-  chart.update();
-}
-
-ipcRenderer.on('scores-result', (event, receivedScores, receivedNames, totalScore) => {
-  if (typeof receivedResult === 'string' && receivedResult.startsWith('Error:')) {
-    outputElement.textContent = receivedResult;
-    return;
+  try {
+     myChart.update(); // Update chart data
+  } catch (error) {
+     console.error("Error during myChart.update():", error);
+     // Optionally notify the user or handle the error
+     // Maybe try to display the chart without labels if update fails?
   }
-  totalScore = totalScore.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  totalScoreTitle.textContent = `Total Score: ${totalScore}`;
-  removeData(myChart);
-  addData(myChart, receivedNames, receivedScores);
-  outputElement.textContent = '';
-});
-
-function getSimplifiedConfig(chart) {
-  const config = JSON.parse(JSON.stringify(chart?.config));
-  config?.data?.datasets?.forEach(dataset => {
-    delete dataset.backgroundColor;
-  });
-  return config;
 }
-//TODO: This needs better implementing. Currently it's exporting based on the size of window, not a size set by the user.
-/* exportButton.addEventListener('click', async () => {
-  const simplifiedConfig = getSimplifiedConfig(myChart);
-  const chartJsImage = new ChartJsImage();
-  chartJsImage.setConfig(simplifiedConfig);
-  chartJsImage.setWidth(1920);
-  chartJsImage.setHeight(1080);
-  const imageBuffer = await chartJsImage.toBuffer();
-  const blob = new Blob([imageBuffer], { type: 'image/png' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'scoreboard.png';
-  link.click();
-}); */
+
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('score-canvas');
+  if (!canvas) {
+     console.error("score-canvas element not found!");
+     return;
+  }
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+     console.error("Could not get 2D context from score-canvas");
+     return;
+  }
+
+  const computedStyle = getComputedStyle(document.body);
+  const primaryColor = computedStyle.getPropertyValue('--color-primary').trim() || '#FF7B00';
+  const secondaryColor = computedStyle.getPropertyValue('--color-secondary').trim() || '#FFD791';
+  const textColor = computedStyle.getPropertyValue('--color-text').trim() || '#EACAAC';
+  const altColor = computedStyle.getPropertyValue('--color-alternate').trim() || '#00B4D8';
+  const bg2Color = computedStyle.getPropertyValue('--color-background-2').trim() || '#004346';
+  const bg3Color = computedStyle.getPropertyValue('--color-background-3').trim() || '#001c35';
+
+
+  myChart = new Chart(ctx, {
+     type: 'bar',
+     data: {
+         labels: [],
+         datasets: [{
+             label: 'Scores',
+             data: [],
+             backgroundColor: (context) => {
+                 const chart = context.chart;
+                 const { ctx, chartArea } = chart;
+                 if (!chartArea) return primaryColor;
+                 const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                 gradient.addColorStop(0, bg2Color);
+                 gradient.addColorStop(1, altColor);
+                 return gradient;
+             },
+             borderColor: 'transparent',
+             borderWidth: 0,
+         }]
+     },
+     options: {
+         indexAxis: 'y',
+         responsive: true,
+         maintainAspectRatio: false,
+         animation: {
+             duration: 300
+         },
+         scales: {
+             x: {
+                 beginAtZero: true,
+                 grid: {
+                     color: 'rgba(234, 202, 172, 0.1)',
+                     borderColor: secondaryColor
+                 },
+                 ticks: {
+                     color: secondaryColor,
+                     autoSkip: true,
+                     maxTicksLimit: 10
+                 }
+             },
+             y: {
+                 grid: {
+                     display: false,
+                 },
+                 ticks: {
+                     color: secondaryColor,
+                     autoSkip: false
+                 }
+             }
+         },
+         plugins: {
+             legend: {
+                 display: false
+             },
+             tooltip: {
+                 enabled: true,
+                 mode: 'index',
+                 intersect: false,
+                 backgroundColor: bg3Color,
+                 titleColor: primaryColor,
+                 bodyColor: textColor,
+                 borderColor: primaryColor,
+                 borderWidth: 1,
+                 padding: 10,
+                 callbacks: {
+                     label: function(context) {
+                         let label = context.dataset.label || '';
+                         if (label) label += ': ';
+                         if (context.parsed && context.parsed.x !== null) { // Check context.parsed exists
+                              label += context.parsed.x.toLocaleString();
+                         }
+                         return label;
+                     },
+                      title: function(context) {
+                           // Check context and context[0] exist
+                           return context && context[0] ? context[0].label : '';
+                       }
+                 }
+             },
+             datalabels: {
+                 display: true, // Can still be toggled by button
+                 color: textColor,
+                 font: {
+                     family: 'Panton-Bold',
+                     size: 12
+                 },
+                 formatter: (value, context) => {
+                     // Check value type before formatting
+                     if (typeof value === 'number') {
+                         return value.toLocaleString();
+                     }
+                     return value; // Return as-is if not a number
+                 },
+                 // --- Conditional Positioning Logic (Value Based - More Robust) ---
+                 align: function(context) {
+                    try {
+                        const chart = context.chart;
+                        const scales = chart.scales;
+                        // Added checks for context.parsed
+                        const value = context.parsed ? context.parsed.x : null;
+
+                        if (!scales || !scales.x || scales.x.max === undefined || scales.x.min === undefined || value === null || value === undefined) {
+                             // console.warn("Datalabel Align: Missing context for calculation."); // Optional logging
+                             return 'center'; // Fallback
+                        }
+                        const maxValue = scales.x.max;
+                        const minValue = scales.x.min;
+                        if (maxValue <= minValue) return 'center'; // Prevent division by zero/negative range
+
+                        const valueRatio = (value - minValue) / (maxValue - minValue);
+                        const thresholdRatio = 0.10; // <<< Adjust this value
+                        return valueRatio < thresholdRatio ? 'right' : 'center';
+                    } catch (e) {
+                        console.error("Error in datalabel align function:", e, context);
+                        return 'center'; // Fallback on error
+                    }
+                 },
+                 anchor: function(context) {
+                    try {
+                        const chart = context.chart;
+                        const scales = chart.scales;
+                        const value = context.parsed ? context.parsed.x : null;
+
+                        if (!scales || !scales.x || scales.x.max === undefined || scales.x.min === undefined || value === null || value === undefined) {
+                            return 'center';
+                        }
+                        const maxValue = scales.x.max;
+                        const minValue = scales.x.min;
+                        if (maxValue <= minValue) return 'center';
+
+                        const valueRatio = (value - minValue) / (maxValue - minValue);
+                        const thresholdRatio = 0.10; // <<< Use same threshold
+                        return valueRatio < thresholdRatio ? 'end' : 'center';
+                     } catch (e) {
+                        console.error("Error in datalabel anchor function:", e, context);
+                        return 'center';
+                     }
+                 },
+                 offset: function(context) {
+                    try {
+                        const chart = context.chart;
+                        const scales = chart.scales;
+                        const value = context.parsed ? context.parsed.x : null;
+
+                        if (!scales || !scales.x || scales.x.max === undefined || scales.x.min === undefined || value === null || value === undefined) {
+                            return 0;
+                        }
+                        const maxValue = scales.x.max;
+                        const minValue = scales.x.min;
+                        if (maxValue <= minValue) return 0;
+
+                        const valueRatio = (value - minValue) / (maxValue - minValue);
+                        const thresholdRatio = 0.10; // <<< Use same threshold
+                        return valueRatio < thresholdRatio ? 8 : 0;
+                     } catch (e) {
+                         console.error("Error in datalabel offset function:", e, context);
+                         return 0;
+                     }
+                 },
+                 padding: {}
+                 // --- End Conditional Logic ---
+             }
+         }
+     }
+  });
+
+}); // End DOMContentLoaded
