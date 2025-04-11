@@ -40,7 +40,6 @@ jobs:
           path: ~/.npm
           key: "no-cache-${{ github.run_id }}"
 
-
       - name: Install Node Dependencies
         run: npm install
 
@@ -48,6 +47,7 @@ jobs:
         run: npm run build:css
 
       - name: Build/Package Application Artifacts
+        # Assumes 'npm run build' in package.json uses 'electron-builder --publish never'
         run: npm run build
 
       - name: Create Standard GitHub Release
