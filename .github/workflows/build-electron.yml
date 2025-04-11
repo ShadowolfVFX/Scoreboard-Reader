@@ -30,6 +30,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+
+      - name: Check GH_TOKEN
+        run: echo "GH_TOKEN is ${{ secrets.GH_TOKEN }}"
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
       - name: Install dependencies
         run: npm install
 
@@ -37,8 +43,6 @@ jobs:
         run: npm run build:css
 
       - name: Build and Publish App
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npm run publish
 
         
