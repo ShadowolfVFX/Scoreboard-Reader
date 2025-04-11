@@ -3,7 +3,7 @@ name: Build and Publish Electron App (Cross-Platform)
 on:
   push:
     tags:
-      - 'v*.*.*' # Example: v1.0.0, v2.3.4
+      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
@@ -17,40 +17,29 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      # --- Start: Python Setup (Kept as requested) ---
       - name: Set up Python
-        uses: actions/setup-python@v2 # Note: v5 is latest, but keeping v2 as original
+        uses: actions/setup-python@v2
         with:
           python-version: '3.x'
 
-      - name: Install dependencies # Renamed slightly for clarity if needed, but command is original
+      - name: Install dependencies
         run: |
           python -m ensurepip --upgrade
           python -m pip install --upgrade pip setuptools
-          # The original had 'npm install' here too - keeping it
           npm install
-      # --- End: Python Setup ---
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.19.0' # Keeping original specific version
-          registry-url: 'https://registry.npmjs.org' # Keeping original registry URL
+          node-version: '20.19.0'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Cache Node.js modules
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          # Keeping original cache key as requested, though it prevents effective caching
           key: "no-cache-${{ github.run_id }}"
 
-      # Keeping this step as it was in the original
-      - name: Check GH_TOKEN
-        run: echo "GH_TOKEN check step: Value is present (masked in logs)"
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      # Keeping the potentially redundant install step as it was in the original
       - name: Install dependencies
         run: npm install
 
@@ -59,8 +48,5 @@ jobs:
 
       - name: Build and Publish App
         run: npm run build
-        # --- Necessary Change START ---
-        # This ensures the GH_TOKEN environment variable is available to the 'npm run build' command
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        # --- Necessary Change END ---
