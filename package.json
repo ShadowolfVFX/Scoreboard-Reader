@@ -4,39 +4,70 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
+    "build": "npm run build:css && electron-builder",
+    "build:css": "tailwindcss -i ./index.css -o ./output.css --minify",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
-    "build:win": "GH_TOKEN=${{ secrets.GH_TOKEN }} electron-builder --win",
-    "tailwind": "npx @tailwindcss/cli -i ./index.css -o ./dist/output.css --watch"
+    "build:win": "electron-builder --win",
+    "dev": "concurrently \"npm run build:css\" \"npm start\""
+  },
+  "homepage": "https://swfx.uk/resources/scoreboard-reader",
+  "bugs": {
+    "url": "https://github.com/ShadowolfVFX/Scoreboard-Reader/issues"
   },
   "keywords": [],
-  "author": "ShadowolfVFX",
+  "author": {
+    "name": "ShadowolfVFX",
+    "email": "test@test.com",
+    "url": "https://shadowolfvfx.net/"
+  },
+  "contributors": [
+    {
+      "name": "Bowiemtl",
+      "email": "bowiemtl@gmail.com"
+    }
+  ],
   "license": "ISC",
   "description": "An app to get scoreboard info",
   "dependencies": {
-    "@tailwindcss/cli": "^4.0.6",
+    "@tailwindcss/cli": "^4.0.9",
     "chart.js": "^4.4.8",
     "chartjs-plugin-datalabels": "^2.2.0",
+    "chartjs-to-image": "^1.2.2",
     "nbt": "^0.8.1",
     "node-nbt": "^1.0.0",
     "prismarine-nbt": "^2.7.0"
   },
   "devDependencies": {
-    "electron": "^34.2.0",
-    "electron-builder": "^25.1.8"
+    "concurrently": "^9.1.2",
+    "electron": "^34.3.0",
+    "electron-builder": "^25.1.8",
+    "tailwindcss": "^4.1.3"
   },
   "build": {
     "appId": "net.shadowolfvfx.ScoreboardReader",
     "productName": "Scoreboard Reader",
-    "directories": {
-      "output": "dist"
-    },
+    "asar": true,
+    "compression": "maximum",
+ 
+    "files": [
+      "output.css",
+      "index.html",
+      "index.js",
+      "renderer.js",
+      "chart.js",
+      "assets/",
+      "package.json"
+    ],
     "mac": {
-      "icon": "build/icons/icon.icns"
+      "icon": "assets/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ]
     },
     "linux": {
-      "icon": "build/icons/icon.png",
+      "icon": "assets/icon.png",
       "target": [
         "deb",
         "rpm",
@@ -45,8 +76,11 @@
       ]
     },
     "win": {
-      "icon": "build/icons/icon.ico",
-      "target": "nsis"
+      "icon": "assets/icon.ico",
+      "target": [
+        "nsis",
+        "zip"
+      ]
     }
   }
 }
