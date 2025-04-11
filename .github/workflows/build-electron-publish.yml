@@ -8,7 +8,7 @@ on:
 
 # IMPORTANT: This workflow requires a repository secret named 'GH_TOKEN'.
 # Create it in Settings -> Secrets and variables -> Actions.
-# The secret value should be a Personal Access Token (PAT) with 'contents: write' scope.
+# The secret value should be a Personal Access Token (PAT) with 'contents: write' scope (or 'repo' scope).
 
 jobs:
   # Job to build the application on different platforms
@@ -30,6 +30,14 @@ jobs:
           node-version: '20' # Specify your desired Node.js version
           cache: 'npm' # Enable caching for npm dependencies
 
+      # ADDED STEP: Ensure setuptools is available for node-gyp on Python 3.12+
+      # This fixes the "ModuleNotFoundError: No module named 'distutils'" error
+      - name: Install Python setuptools (for node-gyp compatibility)
+        # Run on OSes most likely to use Python 3.12+ where distutils is removed
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
+        run: pip install setuptools
+
+      # Install dependencies AFTER ensuring setuptools is present
       - name: Install dependencies
         run: npm install
 
