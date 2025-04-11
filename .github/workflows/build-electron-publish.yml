@@ -3,52 +3,15 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*.*.*' # Trigger only on version tags, e.g., v1.0.0
+      - 'v*.*.*' # Only trigger when pushing a version tag like v1.0.0
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build TailwindCSS
-        run: npm run build:css
-
-      - name: Build Electron app
-        run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            npm run build:linux
-          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            npm run build:mac
-          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            npm run build:win
-          fi
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ matrix.os }}
-          path: dist/**/*
-
   release:
-    needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -64,7 +27,7 @@ jobs:
       - name: Build TailwindCSS
         run: npm run build:css
 
-      - name: Publish GitHub Release
+      - name: Build and Publish Electron app
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: npx electron-builder --publish always
