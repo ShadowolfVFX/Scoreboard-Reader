@@ -1,140 +1,53 @@
 name: Build Electron App
 
-# Controls when the workflow will run
 on:
   push:
-    branches: [ main ] # Or 'master' depending on your default branch name
-  # Optional: Trigger manually from the Actions tab
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  # --- Windows Build Job ---
   build-windows:
-    # The type of runner that the job will run on
     runs-on: windows-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # Checkout the repo
       - name: Check out Git repository
         uses: actions/checkout@v4
 
-      # Sets up Node.js environment
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # Use a Node version compatible with your project (e.g., 18, 20)
+          node-version: 20
 
-      # Cache npm dependencies to speed up installation
+      # Cache npm dependencies
       - name: Cache Node.js modules
         uses: actions/cache@v4
         with:
-          path: ~/.npm # Path to cache (npm cache dir)
+          path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Installs dependencies
+      # Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Builds the Tailwind CSS
-      - name: Build CSS
+      # Build Tailwind CSS (optional if you have this step)
+      - name: Build Tailwind CSS
         run: npm run build:css
 
-      # Runs electron-builder for Windows
+      # Build the Electron App
       - name: Build Windows App
-        run: npm run build -- --win --x64 # Explicitly use the main build script + flags
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }} # Provide the GitHub token here
+        run: npm run build -- --win --x64
 
-      # Uploads the built artifacts (installer/zip)
+      # Upload the built artifacts
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: scoreboard-reader-windows-x64 # Name for the downloadable artifact
-          # Adjust path globbing if electron-builder outputs differently or you build multiple targets (e.g., zip)
-          path: dist/*.exe
-
-  # --- macOS Build Job ---
-  build-macos:
-    # IMPORTANT: macOS builds MUST run on a macOS runner
-    runs-on: macos-latest
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Cache Node.js modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build CSS
-        run: npm run build:css
-
-      # Runs electron-builder for macOS
-      - name: Build macOS App
-        run: npm run build -- --mac # Use the main build script + mac flag
-
-      # Uploads the built artifacts (dmg/zip)
-      - name: Upload macOS Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: scoreboard-reader-macos
-          # Adjust path globbing if electron-builder outputs differently or you build multiple targets (e.g., zip)
-          path: dist/*.dmg
-
-  # --- Linux Build Job ---
-  build-linux:
-    # Runs on Ubuntu Linux
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Cache Node.js modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      # Install necessary libraries for AppImage/other Linux builds on Ubuntu runner
-      - name: Install Linux Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y libopenjp2-7 # Example dependency, check electron-builder docs if needed for specific targets
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build CSS
-        run: npm run build:css
-
-      # Runs electron-builder for Linux
-      - name: Build Linux App
-        run: npm run build -- --linux # Use the main build script + linux flag
-
-      # Uploads the built artifacts (AppImage/deb/etc.)
-      - name: Upload Linux Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: scoreboard-reader-linux
-          # This glob pattern tries to capture common Linux outputs. Adjust as needed.
-          path: dist/*{.AppImage,.snap,.deb,.rpm}
+          name: scoreboard-reader-windows-x64
+          path: |
+            dist/**/*.exe
+            dist/**/*.zip
