@@ -1,33 +1,114 @@
-name: Build and Release
+name: Build and Release Scoreboard Reader
 
+# Trigger the workflow when a tag starting with 'v' (e.g., v1.0.0, v1.2.3) is pushed
 on:
   push:
     tags:
-      - 'v*.*.*' # Only trigger when pushing a version tag like v1.0.0
+      - 'v*.*.*'
 
-env:
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+# IMPORTANT: This workflow requires a repository secret named 'GH_TOKEN'.
+# Create it in Settings -> Secrets and variables -> Actions.
+# The secret value should be a Personal Access Token (PAT) with 'contents: write' scope.
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
+  # Job to build the application on different platforms
+  build:
+    name: Build on ${{ matrix.os }}
+    # Use a matrix strategy to run builds on macOS, Ubuntu, and Windows
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }} # Run on the OS specified in the matrix
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Check out Git repository
+        uses: actions/checkout@v4 # Checks out the repository code
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20' # Specify your desired Node.js version
+          cache: 'npm' # Enable caching for npm dependencies
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build TailwindCSS
-        run: npm run build:css
+      - name: Build CSS
+        run: npm run build:css # Build the Tailwind CSS
 
-      - name: Build and Publish Electron app
+      # Build the application specific to the OS
+      - name: Build for macOS
+        if: matrix.os == 'macos-latest'
+        run: npm run build:mac # Uses electron-builder --mac
+        env:
+          # Pass the custom GH_TOKEN secret to electron-builder if needed
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Build for Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run build:linux # Uses electron-builder --linux
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npx electron-builder --publish always
+
+      - name: Build for Windows
+        if: matrix.os == 'windows-latest'
+        run: npm run build:win # Uses electron-builder --win
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Archive the build artifacts produced in the 'dist' directory
+      # These patterns will find the files even if they are directly in dist/
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.os }} # Name the artifact based on the OS
+          path: | # Specify paths/patterns within dist/ to upload
+            dist/**/*.dmg
+            dist/**/*.zip
+            dist/**/*.AppImage
+            dist/**/*.deb
+            dist/**/*.rpm
+            dist/**/*.snap
+            dist/**/*.exe
+            !dist/builder-debug.yml # Exclude debug files if any
+            !dist/builder-effective-config.yaml
+
+  # Job to create the GitHub Release after all builds are successful
+  release:
+    name: Create GitHub Release
+    needs: build # This job depends on the 'build' job finishing successfully
+    runs-on: ubuntu-latest # Can run on any OS, Ubuntu is common/cheap
+
+    # Grant permissions to write contents (for creating Releases)
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # Download all artifacts produced by the build job
+          # They will be placed in respective directories (e.g., artifacts/dist-macos-latest/)
+          path: artifacts/ # Download into an 'artifacts' directory
+
+      - name: List downloaded artifacts (for debugging)
+        run: ls -R artifacts/
+
+      # Use ncipollo/release-action to create the GitHub Release
+      - name: Create Release and Upload Assets
+        uses: ncipollo/release-action@v1
+        with:
+          # Define the files to upload to the release.
+          # This globs all files within the downloaded artifact directories.
+          artifacts: "artifacts/**/*"
+          # Use the GH_TOKEN secret for authentication
+          token: ${{ secrets.GH_TOKEN }}
+          # Use the tag name that triggered the workflow as the release tag
+          tag: ${{ github.ref_name }}
+          # Use the tag name as the release name
+          name: "Release ${{ github.ref_name }}"
+          # Automatically generate the release body from commits (optional)
+          # Alternatively, provide a body: "Release notes here" or use generateReleaseNotes: true
+          makeLatest: true # Marks this as the latest release
+          # draft: false # Set to true if you want to manually publish later
+          # prerelease: false # Set to true if this is a pre-release
