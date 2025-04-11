@@ -20,15 +20,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20.19.0'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Cache Node.js modules
         uses: actions/cache@v4
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          key: "no-cache-${{ github.run_id }}"
 
 
       - name: Check GH_TOKEN
