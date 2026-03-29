@@ -27,8 +27,7 @@ jobs:
       # ADDED: Set up specific Python version BEFORE Node.js
       # Use Python 3.11 which includes distutils natively
       - name: Set up Python 3.11
-        # Only needed on OSes potentially defaulting to Python 3.12+
-        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
+        # Ensure a compatible Python for node-gyp on all matrix OSes
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -47,17 +46,25 @@ jobs:
         run: npm install
 
       - name: Build CSS
+        # Under `act` on Windows, ubuntu-latest steps run inside a Linux
+        # container with PowerShell scripts, which fails. Skip CSS there,
+        # but still run for windows-latest and on real GitHub runners.
+        if: env.ACT != 'true' || matrix.os == 'windows-latest'
         run: npm run build:css # Build the Tailwind CSS
 
 
       - name: Build for Linux
-        if: matrix.os == 'ubuntu-latest'
+        # Skip Linux build when running locally under `act` on Windows,
+        # because node-gyp cannot cross-compile native modules there.
+        if: matrix.os == 'ubuntu-latest' && env.ACT != 'true'
         run: npm run build:linux # Uses electron-builder --linux
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Build for Windows
-        if: matrix.os == 'windows-latest'
+        # Skip Windows Electron build when running under `act` in a
+        # Linux container (cross-compiling native modules fails).
+        if: matrix.os == 'windows-latest' && env.ACT != 'true'
         run: npm run build:win # Uses electron-builder --win
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -65,6 +72,9 @@ jobs:
       # Archive the build artifacts produced in the 'dist' directory
       # These patterns will find the files even if they are directly in dist/
       - name: Archive production artifacts
+        # Upload-artifact requires GitHub's runtime token, which `act`
+        # does not provide locally, so skip when running under `act`.
+        if: env.ACT != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.os }} # Name the artifact based on the OS
